@@ -70,4 +70,4 @@ def main(path: str, exclude: tuple, todos: bool, complexity: bool, output_json: 
         click.echo(json.dumps(data, indent=2))
         return
 
-    render(result, show_todos=todos, show_complexity=complexity)
+    render(result, show_todos=todos, show_complexity=complexity, top=top)

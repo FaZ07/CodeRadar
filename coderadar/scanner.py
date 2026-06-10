@@ -62,6 +62,12 @@ class ScanResult:
 
 
 def scan(path: str, exclude: Optional[List[str]] = None) -> ScanResult:
+    """Walk a directory tree and collect per-file metrics.
+
+    Skips common build/vendor directories (node_modules, .git, venv, ...)
+    plus any extra directory names given in `exclude`. Files with
+    unrecognized extensions are counted as skipped, not analyzed.
+    """
     exclude_dirs = IGNORE_DIRS | set(exclude or [])
     root = Path(path).resolve()
     files: List[FileMetrics] = []
@@ -118,6 +124,11 @@ def _analyze(path: Path, language: str, root: Path) -> Optional[FileMetrics]:
 
 
 def _python_complexity(source: str) -> int:
+    """Approximate cyclomatic complexity for a whole Python file.
+
+    Counts branching nodes (if/for/while/except/with/assert/bool-ops)
+    plus one per function definition. Returns 0 if the file fails to parse.
+    """
     try:
         tree = ast.parse(source)
     except SyntaxError:

@@ -41,7 +41,9 @@ def _fmt_size(b: int) -> str:
     return f"{b:.1f} TB"
 
 
-def render(result: ScanResult, show_todos: bool = False, show_complexity: bool = False) -> None:
+def render(result: ScanResult, show_todos: bool = False,
+           show_complexity: bool = False, top: int = 10) -> None:
+    """Print the full dashboard for a scan result to the terminal."""
     s = m.summary(result)
     lang_stats = m.language_stats(result)
 
@@ -128,10 +130,10 @@ def render(result: ScanResult, show_todos: bool = False, show_complexity: bool =
     console.print()
 
     # ── Largest files ──────────────────────────────────────────────────────────
-    top = m.top_by_lines(result, 10)
-    if top:
+    largest = m.top_by_lines(result, top)
+    if largest:
         ftbl = Table(
-            title="10 Largest Files",
+            title=f"{len(largest)} Largest Files",
             box=box.ROUNDED,
             border_style="magenta",
             header_style="bold magenta",
@@ -143,7 +145,7 @@ def render(result: ScanResult, show_todos: bool = False, show_complexity: bool =
         ftbl.add_column("Comments", justify="right", style="yellow")
         ftbl.add_column("Size", justify="right", style="magenta")
 
-        for f in top:
+        for f in largest:
             try:
                 rel = str(Path(f.path).relative_to(result.root))
             except ValueError:

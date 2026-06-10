@@ -31,6 +31,12 @@ class HealthScore:
 
 
 def compute(result: ScanResult) -> HealthScore:
+    """Score a scan result 0-100 and assign an A-F grade.
+
+    Weights are heuristics, not science: each of the four components
+    (docs, debt, modularity, complexity) contributes up to 25 points.
+    See module docstring for the thresholds.
+    """
     s = summary(result)
     advice: List[str] = []
 
