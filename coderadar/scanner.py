@@ -104,6 +104,8 @@ def _analyze(path: Path, language: str, root: Path) -> Optional[FileMetrics]:
         1 for ln in lines
         if ln.strip() and any(ln.strip().startswith(p) for p in prefixes)
     )
+    if language == "Python":
+        comment += _python_docstring_lines(content)
     code = max(0, len(lines) - blank - comment)
 
     todos = [ln.strip()[:120] for ln in lines if TODO_RE.search(ln)]
@@ -121,6 +123,29 @@ def _analyze(path: Path, language: str, root: Path) -> Optional[FileMetrics]:
         todos=todos,
         complexity=complexity,
     )
+
+
+def _python_docstring_lines(source: str) -> int:
+    """Count lines occupied by module/class/function docstrings.
+
+    Docstrings are documentation, so they belong in the comment count —
+    a naive prefix scan would classify them as code.
+    """
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return 0
+    count = 0
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Module, ast.ClassDef,
+                             ast.FunctionDef, ast.AsyncFunctionDef)):
+            if (node.body
+                    and isinstance(node.body[0], ast.Expr)
+                    and isinstance(node.body[0].value, ast.Constant)
+                    and isinstance(node.body[0].value.value, str)):
+                expr = node.body[0]
+                count += (expr.end_lineno or expr.lineno) - expr.lineno + 1
+    return count
 
 
 def _python_complexity(source: str) -> int:

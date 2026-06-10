@@ -69,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: FaZ07/CodeRadar@main
+      - uses: FaZ07/CodeRadar@v1
         with:
           fail-under: "60"   # fail the check if score drops below 60
 ```

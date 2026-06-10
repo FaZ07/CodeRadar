@@ -3,7 +3,25 @@ from pathlib import Path
 
 import pytest
 
-from coderadar.scanner import _analyze, scan, _python_complexity
+from coderadar.scanner import (_analyze, scan, _python_complexity,
+                               _python_docstring_lines)
+
+
+def test_docstring_lines_counted():
+    src = '"""Module doc.\n\nMore detail.\n"""\n\ndef f():\n    """One-liner."""\n    return 1\n'
+    assert _python_docstring_lines(src) == 5  # 4-line module doc + 1-line func doc
+
+
+def test_docstrings_count_as_comments(tmp_path: Path):
+    f = tmp_path / "doc.py"
+    f.write_text('"""Docstring line."""\nx = 1\n')
+    metrics = _analyze(f, "Python", tmp_path)
+    assert metrics.comment_lines == 1
+    assert metrics.code_lines == 1
+
+
+def test_docstring_lines_syntax_error():
+    assert _python_docstring_lines("def (broken:") == 0
 
 
 def test_python_complexity_basic():

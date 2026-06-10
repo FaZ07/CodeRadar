@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "coderadar"
-version = "0.1.0"
+version = "1.0.0"
 description = "Instant codebase health radar — language breakdown, complexity hotspots, and tech debt in one beautiful CLI"
 readme = "README.md"
 license = { text = "MIT" }
