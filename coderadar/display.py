@@ -8,6 +8,7 @@ from rich.table import Table
 
 from . import metrics as m
 from .scanner import ScanResult
+from .score import compute as compute_score
 
 console = Console()
 
@@ -47,6 +48,20 @@ def render(result: ScanResult, show_todos: bool = False, show_complexity: bool =
     console.print()
     console.rule("[bold cyan] CodeRadar [/bold cyan]")
     console.print(f"[dim]  {result.root}[/dim]")
+    console.print()
+
+    # ── Health score ──────────────────────────────────────────────────────────
+    hs = compute_score(result)
+    breakdown = (
+        f"[dim]docs {hs.docs}/25   debt {hs.debt}/25   "
+        f"modularity {hs.modularity}/25   complexity {hs.complexity}/25[/dim]"
+    )
+    body = (f"[bold {hs.color}]{hs.grade}[/bold {hs.color}]  "
+            f"[bold white]{hs.total}/100[/bold white]\n{breakdown}")
+    if hs.advice:
+        body += "\n" + "\n".join(f"[yellow]>[/yellow] {a}" for a in hs.advice)
+    console.print(Panel(body, title="[bold]Health Score[/bold]",
+                        border_style=hs.color, expand=False))
     console.print()
 
     # ── Summary tiles ──────────────────────────────────────────────────────────

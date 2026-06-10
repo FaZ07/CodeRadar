@@ -62,7 +62,10 @@ def main(path: str, exclude: tuple, todos: bool, complexity: bool, output_json: 
         sys.exit(1)
 
     if output_json:
+        from .score import compute as compute_score
+        hs = compute_score(result)
         data = m.summary(result)
+        data["health"] = {"score": hs.total, "grade": hs.grade, "advice": hs.advice}
         data["language_stats"] = m.language_stats(result)
         click.echo(json.dumps(data, indent=2))
         return

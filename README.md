@@ -1,11 +1,24 @@
 # CodeRadar
 
-**Instant codebase health snapshot — in your terminal.**
+[![CI](https://github.com/FaZ07/CodeRadar/actions/workflows/ci.yml/badge.svg)](https://github.com/FaZ07/CodeRadar/actions/workflows/ci.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Code style: zero config](https://img.shields.io/badge/config-zero-brightgreen.svg)](#usage)
 
-CodeRadar is a zero-config CLI that scans any project and produces a beautiful, rich dashboard showing language breakdown, largest files, tech-debt markers, and Python complexity hotspots. No API keys, no cloud — just run it.
+**Grade any codebase A–F in one command. No config, no API keys, no cloud.**
+
+CodeRadar scans a project and prints a rich terminal dashboard: an overall **Health Score**, language breakdown, largest files, tech-debt radar, and Python complexity hotspots. Run it before a PR review, during onboarding, or while evaluating an open-source dependency — and know in 2 seconds what you're dealing with.
 
 ```
 coderadar .
+```
+
+```
++----------------------- Health Score ------------------------+
+| B  82/100                                                   |
+| docs 20/25   debt 17/25   modularity 25/25   complexity 20/25 |
+| > 12 TODO/FIXME markers - burn down the backlog             |
++-------------------------------------------------------------+
 ```
 
 ```
@@ -29,6 +42,7 @@ coderadar .
 
 ## Features
 
+- **Health Score (A–F)** — one number for the whole repo, scored on documentation, tech debt, modularity, and complexity, with actionable advice on what to fix first
 - **30+ languages** detected automatically by file extension
 - **Line-level breakdown** — code vs. comments vs. blanks per language
 - **Largest files** table with per-file stats
