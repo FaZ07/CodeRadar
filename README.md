@@ -51,6 +51,36 @@ coderadar .
 - **JSON output** — pipe to `jq`, CI scripts, or dashboards (`--json`)
 - Smart ignores — skips `node_modules`, `__pycache__`, `.git`, `venv`, `dist`, etc. automatically
 
+## Use as a GitHub Action
+
+Get a health report on every pull request — posted as a PR comment and the job summary — plus an optional CI gate:
+
+```yaml
+# .github/workflows/health.yml
+name: Health
+on: [pull_request]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: FaZ07/CodeRadar@main
+        with:
+          fail-under: "60"   # fail the check if score drops below 60
+```
+
+| Input | Default | Description |
+|---|---|---|
+| `path` | `.` | Directory to scan |
+| `fail-under` | `0` | Fail if health score is below N (0 disables) |
+| `comment` | `true` | Post the report as a PR comment |
+| `github-token` | `github.token` | Token for the PR comment |
+
 ## Installation
 
 ```bash
@@ -96,6 +126,8 @@ coderadar . -t -c
 | `-c`, `--complexity` | Show Python cyclomatic-complexity hotspots |
 | `-e DIR`, `--exclude DIR` | Exclude a directory by name (repeatable) |
 | `--json` | Output summary as JSON |
+| `--md` | Output report as GitHub-flavored markdown |
+| `--fail-under N` | Exit with code 2 if health score is below N (CI gate) |
 | `--top N` | Number of largest files to display (default: 10) |
 | `-v`, `--version` | Show version |
 | `-h`, `--help` | Show help |

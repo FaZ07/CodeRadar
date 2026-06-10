@@ -34,6 +34,19 @@ from .display import console, render
     help="Output summary as JSON (machine-readable).",
 )
 @click.option(
+    "--md",
+    "output_md",
+    is_flag=True,
+    help="Output report as GitHub-flavored markdown (for PR comments).",
+)
+@click.option(
+    "--fail-under",
+    type=click.IntRange(0, 100),
+    default=None,
+    metavar="N",
+    help="Exit with code 2 if health score is below N (CI gate).",
+)
+@click.option(
     "--top",
     default=10,
     show_default=True,
@@ -41,7 +54,9 @@ from .display import console, render
     help="Number of largest files to display.",
 )
 @click.version_option(__version__, "-v", "--version", prog_name="coderadar")
-def main(path: str, exclude: tuple, todos: bool, complexity: bool, output_json: bool, top: int) -> None:
+def main(path: str, exclude: tuple, todos: bool, complexity: bool,
+         output_json: bool, output_md: bool, fail_under: int, top: int) -> None:
+    # Legacy Windows consoles default to cp1252, which can't print emoji
     """CodeRadar — instant codebase health snapshot.
 
     Scan PATH (defaults to current directory) and print a rich report showing
@@ -55,19 +70,33 @@ def main(path: str, exclude: tuple, todos: bool, complexity: bool, output_json: 
       coderadar . -e tests -e docs     # exclude dirs
       coderadar . --json               # machine-readable output
     """
+    # Legacy Windows consoles default to cp1252, which can't print emoji
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
     result = scanner.scan(path, list(exclude))
 
     if not result.files:
         console.print("[red]No recognized source files found.[/red]")
         sys.exit(1)
 
+    from .score import compute as compute_score
+    hs = compute_score(result)
+
     if output_json:
-        from .score import compute as compute_score
-        hs = compute_score(result)
         data = m.summary(result)
         data["health"] = {"score": hs.total, "grade": hs.grade, "advice": hs.advice}
         data["language_stats"] = m.language_stats(result)
         click.echo(json.dumps(data, indent=2))
-        return
+    elif output_md:
+        from .report import to_markdown
+        click.echo(to_markdown(result))
+    else:
+        render(result, show_todos=todos, show_complexity=complexity, top=top)
 
-    render(result, show_todos=todos, show_complexity=complexity, top=top)
+    if fail_under is not None and hs.total < fail_under:
+        click.echo(
+            f"Health score {hs.total} is below threshold {fail_under}.",
+            err=True,
+        )
+        sys.exit(2)

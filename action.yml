@@ -1,0 +1,52 @@
+name: "CodeRadar Health Check"
+description: "Grade your codebase A-F on every PR: health score, tech debt, complexity hotspots. Posts the report as a PR comment."
+author: "Mohamed Fazil"
+branding:
+  icon: "activity"
+  color: "blue"
+
+inputs:
+  path:
+    description: "Directory to scan"
+    required: false
+    default: "."
+  fail-under:
+    description: "Fail the check if the health score is below this number (0-100). 0 disables the gate."
+    required: false
+    default: "0"
+  comment:
+    description: "Post the report as a PR comment (true/false)"
+    required: false
+    default: "true"
+  github-token:
+    description: "Token used to post the PR comment"
+    required: false
+    default: ${{ github.token }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install CodeRadar
+      shell: bash
+      run: pip install --quiet "${{ github.action_path }}"
+
+    - name: Scan and build report
+      shell: bash
+      run: |
+        coderadar "${{ inputs.path }}" --md > coderadar-report.md
+        cat coderadar-report.md >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Comment on PR
+      if: ${{ inputs.comment == 'true' && github.event_name == 'pull_request' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        gh pr comment "${{ github.event.pull_request.number }}" \
+          --repo "${{ github.repository }}" \
+          --body-file coderadar-report.md \
+          || echo "::warning::Could not post PR comment (check token permissions)"
+
+    - name: Enforce health threshold
+      shell: bash
+      run: coderadar "${{ inputs.path }}" --fail-under "${{ inputs.fail-under }}" --json > /dev/null
