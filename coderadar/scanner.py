@@ -35,7 +35,10 @@ IGNORE_DIRS = {
     "eggs", ".eggs", "site-packages", ".cache", "tmp", "temp",
 }
 
-TODO_MARKERS = ("TODO", "FIXME", "HACK", "XXX", "BUG", "WARN", "NOTE")
+import re
+
+# Only match markers in comment context: "# TODO", "// FIXME:", "<!-- HACK", "* XXX"
+TODO_RE = re.compile(r"(?:#|//|/\*|<!--|--|\*)\s*(?:TODO|FIXME|HACK|XXX|BUG)\b", re.IGNORECASE)
 
 
 @dataclass
@@ -97,11 +100,7 @@ def _analyze(path: Path, language: str, root: Path) -> Optional[FileMetrics]:
     )
     code = max(0, len(lines) - blank - comment)
 
-    todos = [
-        ln.strip()[:120]
-        for ln in lines
-        if any(marker in ln.upper() for marker in TODO_MARKERS)
-    ]
+    todos = [ln.strip()[:120] for ln in lines if TODO_RE.search(ln)]
 
     complexity = _python_complexity(content) if language == "Python" else 0
 
